@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">CatFacts</string>
+    <string name="err_msg_no_data">No data matched!</string>
+    <string name="cat_length_title">Length :</string>
+    <string name="max_length">Max Length</string>
+    <string name="share_title" >Share a fact via</string>
+</resources>
