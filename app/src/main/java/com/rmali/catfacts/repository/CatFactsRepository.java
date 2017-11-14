@@ -2,15 +2,16 @@ package com.rmali.catfacts.repository;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
-import android.util.Log;
 
+import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import com.rmali.catfacts.model.pojo.CatFactEntity;
 import com.rmali.catfacts.model.pojo.CatFactResponse;
 import com.rmali.catfacts.model.webservice.CatFactsApi;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.observers.DisposableObserver;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -26,11 +27,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class CatFactsRepository {
     private CatFactsApi mFactsApi;
     private MutableLiveData<CatFactResponse> data = new MutableLiveData<>();
+    private CompositeDisposable mCompositeDisposable;
 
     public CatFactsRepository(){
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(CatFactsApi.CAT_FACTS_BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
         mFactsApi = retrofit.create(CatFactsApi.class);
     }
@@ -39,19 +42,28 @@ public class CatFactsRepository {
      * fetches list of Cat Facts from a web service
      */
     public MutableLiveData<CatFactResponse> getCatFacts(int limit, int max_length, int currentPage) {
-        mFactsApi.getCatFactsList(limit, max_length, currentPage).enqueue(new Callback<CatFactResponse>() {
-            @Override
-            public void onResponse(Call<CatFactResponse> call, Response<CatFactResponse> response) {
-                if(response.isSuccessful()) {
-                    data.setValue(response.body());
-                }
-            }
+        mCompositeDisposable = new CompositeDisposable();
+        mCompositeDisposable.add(mFactsApi.getCatFactsList(limit, max_length, currentPage)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith( new DisposableObserver<CatFactResponse>(){
 
-            @Override
-            public void onFailure(Call<CatFactResponse> call, Throwable t) {
-                data.setValue(null);
-            }
-        });
+                    @Override
+                    public void onNext(CatFactResponse factResponse) {
+                        data.setValue(factResponse);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        data.setValue(null);
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                })
+        );
 
         return data;
     }
@@ -61,20 +73,28 @@ public class CatFactsRepository {
      */
     public LiveData<CatFactEntity> getRandomCatFact(int max_length) {
         final MutableLiveData<CatFactEntity> data = new MutableLiveData<>();
-        mFactsApi.getRandomCatFact(max_length).enqueue(new Callback<CatFactEntity>() {
-            @Override
-            public void onResponse(Call<CatFactEntity> call, Response<CatFactEntity> response) {
-                if(response.isSuccessful())
-                    data.setValue(response.body());
-            }
+        CompositeDisposable disposable = new CompositeDisposable();
+        disposable.add(mFactsApi.getRandomCatFact(max_length)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith( new DisposableObserver<CatFactEntity>(){
 
-            @Override
-            public void onFailure(Call<CatFactEntity> call, Throwable t) {
-                Log.e("Failed",t.getMessage().toString());
-                data.setValue(null);
-            }
-        });
+                    @Override
+                    public void onNext(CatFactEntity factEntity) {
+                        data.setValue(factEntity);
+                    }
 
+                    @Override
+                    public void onError(Throwable e) {
+                        data.setValue(null);
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                })
+        );
         return data;
     }
 }
