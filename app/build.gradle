@@ -40,4 +40,7 @@ dependencies {
     implementation 'com.google.dagger:dagger-android-support:'+rootProject.dagger_version; // if you use the support libraries
     annotationProcessor 'com.google.dagger:dagger-android-processor:'+rootProject.dagger_version;
     annotationProcessor 'com.google.dagger:dagger-compiler:'+rootProject.dagger_version;
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.5'
+    implementation 'com.jakewharton.retrofit:retrofit2-rxjava2-adapter:1.0.0'
 }
