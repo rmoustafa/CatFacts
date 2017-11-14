@@ -4,6 +4,7 @@ A simple project that fetches cat facts datastream(page by page) from a remote s
 # Features:- 
 - MVVM clean application architecture 
 - Extensive use for the LiveData with viewmodel
+- Using RxJava  
 - Using Dagger2 and Butterknife to add support for dependency injection.
 - Using Retrofit as a rest http client with GSon 
 
